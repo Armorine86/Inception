@@ -1,4 +1,11 @@
-FROM alpine:3.14
+# Parent image layer
+FROM alpine:3.15
+
+RUN mkdir /var/www/html
+
+COPY ./tools/site/* /var/www/html/
+
+COPY ./tools/default.conf /etc/nginx/http.d/default.conf
 
 RUN apk update && apt upgrade 
 
@@ -15,12 +22,9 @@ RUN openssl req -x509 \
 				-keyout /etc/ssl/private/nginx_ssl.key \
 				-out /etc/ssl/certs/nginx_ssl.crt
 
-RUN mkdir /var/www/html
-
-COPY ./tools/site/* /var/www/html/
-
-COPY ./tools/default.conf /etc/nginx/http.d/default.conf
-
-CMD [ "nginx", "-g", "deamon off;"]
-
+# Opens ports
 EXPOSE 443 9000
+
+# Specify commands to run at Runtime when the container is set
+CMD ["nginx", "-g", "deamon off;"]
+
