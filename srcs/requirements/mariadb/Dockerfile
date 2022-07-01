@@ -1,1 +1,33 @@
-FROM alpine:3.14
+FROM debian:buster
+
+EXPOSE 3306
+
+ENV MARIA_WORDPRESS_DB=wordpress_db
+ENV MARIA_DB_NEW_ROOT_PWD=inception
+ENV MARIA_DB_USER=wordpress
+ENV MARIA_DB_USER_PWD=mmondell1234
+
+# Update and upgrade apt-get
+RUN apt update && apt-get upgrade -y
+RUN apt-get update && apt-get upgrade -y
+
+RUN apt-get install mariadb-server -y
+RUN apt-get install gettext-base -y
+
+RUN mkdir -p /run/mysql/
+
+# Set directory ownership to mysql
+RUN chown -R mysql /run/mysql/
+
+RUN mysql_install_db --user=mysql --datadir=/var/lib/mysql --auth-root-authentication-method=normal
+
+COPY ./tools/my.cnf /etc/mysql/my.cnf
+COPY ./tools/db_setup.sql .
+COPY ./tools/start.sh .
+
+RUN chmod 777 /var/lib/mysql
+RUN chmod +x ./start.sh
+
+ENTRYPOINT ["./start.sh"]
+
+CMD [ "mysqld" ]
