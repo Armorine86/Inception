@@ -4,8 +4,6 @@ set -exo pipefail
 
 SUCCESS=/var/lib/mysql/.setup_done
 
-echo $@
-
 if [ -f "$SUCCESS" ]
 then
 	echo "Database is already configured... Starting MariaDB"
@@ -34,4 +32,4 @@ else
 	killall mysqld
 fi
 
-exec "$@"
+exec mysqld

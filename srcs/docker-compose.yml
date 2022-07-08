@@ -1,0 +1,81 @@
+version: '3'
+
+services:
+  mariadb:
+    container_name: ${DB_SERVER}
+    build: ./requirements/mariadb
+    hostname: ${DB_SERVER}
+    restart: always
+    environment:
+      - MARIA_WORDPRESS_DB=${MARIA_WORDPRESS_DB}
+      - MARIA_DB_NEW_ROOT_PWD=${MARIA_DB_NEW_ROOT_PWD}
+      - MARIA_DB_USER=${MARIA_DB_USER}
+      - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
+      - DB_DATADIR=${DB_DATADIR}
+    volumes:
+      - volume-mariadb:${DB_DATADIR}
+    networks:
+      - inception
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    restart: always
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - MARIA_WORDPRESS_DB=${MARIA_WORDPRESS_DB}
+      - MARIA_DB_USER=${MARIA_DB_USER}
+      - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
+      - DB_EMAIL=${DB_EMAIL}
+      - DB_SERVER=${DB_SERVER}
+      - WORDPRESS_USER=${WORDPRESS_USER}
+      - WORDPRESS_USER_PWD=${WORDPRESS_USER_PWD}
+      - WORDPRESS_USER_EMAIL=${WORDPRESS_USER_EMAIL}
+    volumes:
+      - volume-wordpress:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      args:
+        - DOMAIN_NAME=${DOMAIN_NAME}
+        - CERT_CRT=${CERT_CRT}
+        - CERT_KEY=${CERT_KEY}
+        - DB_SERVER=${DB_SERVER}
+    ports:
+      - 443:443
+    restart: always
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - CERT_CRT=${CERT_CRT}
+      - CERT_KEY=${CERT_KEY}
+      - DB_SERVER=${DB_SERVER}
+    volumes:
+      - volume-wordpress:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+
+networks:
+  inception:
+    driver: bridge
+
+volumes:
+  volume-mariadb:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${VOLUME_PATH}/mariadb
+  volume-wordpress:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${VOLUME_PATH}/wordpress
