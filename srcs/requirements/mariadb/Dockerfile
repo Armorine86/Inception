@@ -1,42 +1,37 @@
+# Pull base Image for the container
 FROM alpine:3.14
 
+# Expose the port for the network
 EXPOSE 3306
 
-ENV MARIA_WORDPRESS_DB=wordpress_db
-ENV MARIA_DB_NEW_ROOT_PWD=inception
-ENV MARIA_DB_USER=wordpress
-ENV MARIA_DB_USER_PWD=mmondell1234
+# Update package manager
+RUN apk update
+RUN apk upgrade
 
-# Update and upgrade apt-get
-RUN apk update && apk upgrade
+# Install dependencies
+RUN apk add mariadb mariadb-common mariadb-client mariadb-server-utils gettext
 
-RUN apk add mariadb-server
-RUN apk add gettext-base
+# Replace the default mariadb Config files with our own
+RUN rm -f /etc/my.cnf.d/mariadb-server.cnf
+RUN rm -f /etc/my.cnf.d/my.cnf
+COPY conf/my.cnf /etc/my.cnf.d/mly.cnf
+COPY conf/my.cnf /etc/mysql/my.cnf
 
-RUN mkdir -p /run/mysql/
+# Copy setup script to the container
+COPY tools/setup.sh setup.sh
 
-RUN chown -R mysql:mysql /run/mysql/
+# Copy the .sql config file to the container
+COPY conf/db_setup.sql db_setup.sql
 
-# Set directory ownership to mysql
-RUN chown -R mysql:mysql /var/lib/mysql/
+# Make sure the script is executable
+RUN chmod +x setup.sh
 
-# Set the port
-RUN sed -Ei '/^(#)?port/c port                    = 3306' /etc/mysql/mariadb.conf.d/50-server.cnf
-# Allow remote connections
-RUN sed -i '/^bind-address/c bind-address            = 0.0.0.0' /etc/mysql/mariadb.conf.d/50-server.cnf
-# Set the datadir
-RUN sed -Ei "/^datadir/c datadir                 = /var/lib/mysql/" /etc/mysql/mariadb.conf.d/50-server.cnf
+# Create Necessary folders for Mariadb, and change ownership
+RUN mkdir -p /run/mysqld /var/lib/mysql
+RUN chown -R mysql /var/lib/mysql
 
-RUN mysql_install_db --user=mysql --datadir=/var/lib/mysql --auth-root-authentication-method=normal
+# Initialize system tables and set Data directory
+RUN /usr/bin/mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
 
-# COPY ./tools/my.cnf /etc/mysql/my.cnf
-
-COPY ./tools/db_setup.sql .
-COPY ./tools/start.sh .
-
-RUN chmod 777 /var/lib/mysql/
-RUN chmod +x ./start.sh
-
-ENTRYPOINT ["./start.sh"]
-
-CMD [ "mysqld" ]
+# Run the script to setup the DB
+CMD [ "sh", "setup.sh" ]

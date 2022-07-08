@@ -1,34 +1,44 @@
 FROM alpine:3.14
 
+# Expose the port to the network
 EXPOSE 9000
 
-# Update and upgrade apt-get
-RUN apk update && apk upgrade
+ARG DOMAIN_NAME=DOMAIN_NAME
+ARG MARIA_WORDPRESS_DB=MARIA_WORDPRESS_DB
+ARG MARIA_DB_USER=MARIA_DB_USER
+ARG MARIA_DB_USER_PWD=MARIA_DB_USER_PWD
+ARG DB_SERVER=DB_SERVER
+ARG WORDPRESS_TITLE=WORDPRESS_TITLE
+ARG WORDPRESS_ADMIN=WORDPRESS_ADMIN
+ARG WORDPRESS_ADMIN_PWD=WORDPRESS_ADMIN_PWD
+ARG WORDPRESS_ADMIN_EMAIL=WORDPRESS_ADMIN_EMAIL
+ARG WORDPRESS_USER=WORDPRESS_USER
+ARG WORDPRESS_USER_EMAIL=WORDPRESS_USER_EMAIL
+ARG WORDPRESS_USER_PWD=WORDPRESS_USER_PWD
 
+# Update and upgrade package manager
+RUN apk update
+RUN apk upgrade
 
-RUN mkdir -p /var/www /run/php
+# Copy files to the container
+COPY ./tools/* ./
 
-COPY ./tools/install_dependencies.sh .
-COPY ./tools/configure_wordpress.sh .
+# Make the script executable
+RUN chmod +x setup.sh
 
-RUN chmod +x /install_dependencies.sh
-RUN chmod +x /configure_wordpress.sh
+# Install dependencies
+RUN apk add php7 php7-fpm php7-opcache php7-mysqli php7-session php7-iconv php7-json \
+	php7-gd php7-curl php7-xml php7-common php7-imap php7-cgi php7-pdo php7-pdo_mysql \
+	php7-soap php7-xmlrpc php7-posix php7-mcrypt php7-redis php7-gettext php7-ldap \
+	php7-ctype php7-dom php7-phar curl
 
-RUN ./install_dependencies.sh
+# add a user profile to the container (-D == no password)
+RUN adduser -D mmondell
 
-RUN rm -f /etc/php/7.3/fpm/pool.d/www.conf
-COPY ./tools/www.conf /etc/php/7.3/fpm/pool.d/
+RUN mkdir -p /var/www/html
+RUN chmod 777 -R /var/www/html
+RUN chown -R mmondell:mmondell /var/www/html
 
-# Get and installs the CLI for Wordpress
-RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-	&& chmod a+x wp-cli.phar \
-	&& mv wp-cli.phar /usr/local/bin/wp
+ENTRYPOINT [ "sh", "setup.sh" ]
 
-# Makes PHP listen to port 9000
-RUN sed -i '/listen = \/run\/php\/php7.3-fpm.sock/c listen = 9000' /etc/php/7.3/fpm/pool.d/www.conf
-
-RUN chown -R www-data:www-data /var/www
-
-ENTRYPOINT [ "./configure_wordpress.sh" ]
-
-CMD ["php-fpm7.3", "-F", "-R"]
+CMD ["php-fpm7", "-F"]

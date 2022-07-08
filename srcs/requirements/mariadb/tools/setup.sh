@@ -10,26 +10,21 @@ then
 	/usr/bin/mysqld
 else
 	# Start mysql service
-	/etc/init.d/mysql start
+	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
+	sleep 10
 
 	# envsubst is used to substitute shell format strings with environment variables in text.
 	# redirect the config with expended variable into initdb.sql
 	envsubst < db_setup.sql > initdb.sql
 
-	echo "Starting mysql"
-	/usr/bin/mysql
+	# Kill process
+	pkill mysqld
+	sleep 1
 
-	echo "Attempting to setup mariadb with initdb.sql file as root"
-	mariadb -uroot -proot < initdb.sql
+	# Restart service for changes to take effect
+	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
 
 	# If setup is successful, create a hidden file to mark setuping as completed
 	touch /var/lib/mysql/.setup_done
 
-	echo "Setup successful... Removin initdb.sql file"
-	rm initdb.sql
-	rm db_setup.sql
-
-	killall mysqld
 fi
-
-exec mysqld
