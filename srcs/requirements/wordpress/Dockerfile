@@ -1,10 +1,10 @@
-FROM debian:buster
+FROM alpine:3.14
 
 EXPOSE 9000
 
 # Update and upgrade apt-get
-RUN apt update && apt-get upgrade -y
-RUN apt-get update && apt-get upgrade -y
+RUN apk update && apk upgrade
+
 
 RUN mkdir -p /var/www /run/php
 

@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM alpine:3.14
 
 EXPOSE 3306
 
@@ -8,11 +8,10 @@ ENV MARIA_DB_USER=wordpress
 ENV MARIA_DB_USER_PWD=mmondell1234
 
 # Update and upgrade apt-get
-RUN apt update && apt upgrade -y
-RUN apt-get update && apt-get upgrade -y
+RUN apk update && apk upgrade
 
-RUN apt-get install mariadb-server -y
-RUN apt-get install gettext-base -y
+RUN apk add mariadb-server
+RUN apk add gettext-base
 
 RUN mkdir -p /run/mysql/
 

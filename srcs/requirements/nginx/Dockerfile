@@ -1,5 +1,5 @@
 # Parent image layer
-FROM debian:buster
+FROM alpine:3.14
 
 # Opens ports
 EXPOSE 443
@@ -11,10 +11,10 @@ COPY ./tools/site/* /var/www/html/
 COPY ./tools/default.conf /etc/nginx/http.d/default.conf
 
 # Update and upgrade apt-get
-RUN apt update && apt upgrade -y
-RUN apt-get update && apt-get upgrade -y
+RUN apk update && apk upgrade
 
-RUN apt install -y nginx \
+
+RUN apk add -y nginx \
 				openssl
 
 RUN mkdir -p /etc/ssl/private && mkdir -p /etc/ssl/certs
