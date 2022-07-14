@@ -11,7 +11,7 @@ then
 else
 	# Start mysql service
 	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
-	sleep 10
+	sleep 5
 
 	# envsubst is used to substitute shell format strings with environment variables in text.
 	# redirect the config with expended variable into initdb.sql
@@ -19,7 +19,7 @@ else
 
 	# Kill process
 	pkill mysqld
-	sleep 1
+	sleep 2
 
 	# Restart service for changes to take effect
 	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql

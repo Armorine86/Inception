@@ -28,7 +28,7 @@ RUN chmod +x setup.sh
 
 # Create Necessary folders for Mariadb, and change ownership
 RUN mkdir -p /run/mysqld /var/lib/mysql
-RUN chown -R mysql /var/lib/mysql
+RUN chown -R mysql:mysql /var/lib/mysql
 
 # Initialize system tables and set Data directory
 RUN /usr/bin/mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql

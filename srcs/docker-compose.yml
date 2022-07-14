@@ -1,81 +1,91 @@
+# -> Latest version of docker-compose
 version: '3'
 
 services:
-  mariadb:
-    container_name: ${DB_SERVER}
-    build: ./requirements/mariadb
-    hostname: ${DB_SERVER}
-    restart: always
-    environment:
-      - MARIA_WORDPRESS_DB=${MARIA_WORDPRESS_DB}
-      - MARIA_DB_NEW_ROOT_PWD=${MARIA_DB_NEW_ROOT_PWD}
-      - MARIA_DB_USER=${MARIA_DB_USER}
-      - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
-      - DB_DATADIR=${DB_DATADIR}
-    volumes:
-      - volume-mariadb:${DB_DATADIR}
-    networks:
-      - inception
+    nginx:
+        depends_on:
+            - wordpress
+        build: requirements/nginx/
+        image: nginx_img
+        container_name: nginx_cont
+        ports:
+            - "443:443"
+        networks:
+            - inception
+        volumes:
+            - /home/mmondell/data/wordpress:/var/www/html
+        restart: unless-stopped
+    
+    wordpress:
+        depends_on:
+            - mariadb
+        build:
+            context: requirements/wordpress/
+            args:
+                DOMAIN_NAME: ${DOMAIN_NAME}
+                MARIA_DB_USER: ${MARIA_DB_USER}
+                MARIA_DB_USER_PWD: ${MARIA_DB_USER_PWD}
+                DB_SERVER: ${DB_SERVER}
+                WORDPRESS_ADMIN: ${WORDPRESS_ADMIN}
+                WORDPRESS_ADMIN_PWD: ${WORDPRESS_ADMIN_PWD}
+                WORDPRESS_USER: ${WORDPRESS_USER}
+                WORDPRESS_USER_PWD: ${WORDPRESS_USER_PWD}
+        image: wp_img
+        container_name: wp_cont
+        expose:
+            - "3306"
+        networks:
+            - inception
+        volumes:
+            - ~/data/wordpress:/var/www/html
+        env_file:
+            - .env
+        environment:
+            - DOMAIN_NAME=${DOMAIN_NAME}
+            - MARIA_DB_USER=${MARIA_DB_USER}
+            - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
+            - DB_SERVER=${DB_SERVER}
+            - WORDPRESS_ADMIN=${WORDPRESS_ADMIN}
+            - WORDPRESS_ADMIN_PWD=${WORDPRESS_ADMIN_PWD}
+            - WORDPRESS_USER=${WORDPRESS_USER}
+            - WORDPRESS_USER_PWD=${WORDPRESS_USER_PWD}
+        restart: on-failure
 
-  wordpress:
-    container_name: wordpress
-    build: ./requirements/wordpress
-    restart: always
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-      - MARIA_WORDPRESS_DB=${MARIA_WORDPRESS_DB}
-      - MARIA_DB_USER=${MARIA_DB_USER}
-      - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
-      - DB_EMAIL=${DB_EMAIL}
-      - DB_SERVER=${DB_SERVER}
-      - WORDPRESS_USER=${WORDPRESS_USER}
-      - WORDPRESS_USER_PWD=${WORDPRESS_USER_PWD}
-      - WORDPRESS_USER_EMAIL=${WORDPRESS_USER_EMAIL}
-    volumes:
-      - volume-wordpress:/var/www/html
-    networks:
-      - inception
-    depends_on:
-      - mariadb
-
-  nginx:
-    container_name: nginx
-    build:
-      context: ./requirements/nginx
-      args:
-        - DOMAIN_NAME=${DOMAIN_NAME}
-        - CERT_CRT=${CERT_CRT}
-        - CERT_KEY=${CERT_KEY}
-        - DB_SERVER=${DB_SERVER}
-    ports:
-      - 443:443
-    restart: always
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-      - CERT_CRT=${CERT_CRT}
-      - CERT_KEY=${CERT_KEY}
-      - DB_SERVER=${DB_SERVER}
-    volumes:
-      - volume-wordpress:/var/www/html
-    networks:
-      - inception
-    depends_on:
-      - wordpress
+    mariadb:
+        build: requirements/mariadb
+        image: mariadb_img
+        container_name: mariadb_cont
+        expose:
+            - "9000"
+        networks:
+            - inception
+        volumes:
+            - ~/data/mariadb:/var/lib/mysql
+        env_file:
+            - .env
+        environment:
+            - MARIA_DB_USER=${MARIA_DB_USER}
+            - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
+            - DB_SERVER=${DB_SERVER}
+            - MARIA_DB_NEW_ROOT_PWD=${MARIA_DB_NEW_ROOT_PWD}
+        restart: on-failure
 
 networks:
-  inception:
-    driver: bridge
+    inception:
+#        name: inception
+        driver: bridge
 
 volumes:
-  volume-mariadb:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: ${VOLUME_PATH}/mariadb
-  volume-wordpress:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: ${VOLUME_PATH}/wordpress
+    volume_mariadb: 
+        driver: local
+        driver_opts:
+            o: 'bind'
+            type: 'none'
+            device: '~/Documents/inception/volumes'
+    
+    volume_wordpress:
+        driver: local
+        driver_opts:
+            o: 'bind'
+            type: 'none' 
+            device: '~/Documents/inception/volumes'
