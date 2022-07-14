@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 set -exo pipefail
 
@@ -9,6 +9,9 @@ then
 	echo "Database is already configured... Starting MariaDB"
 	/usr/bin/mysqld
 else
+	if [ ! -d "/var/lib/mysql/mysql" ]; then
+  		mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=root --rpm --skip-test-db > /dev/null
+	fi
 	# Start mysql service
 	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
 	sleep 5
@@ -22,7 +25,7 @@ else
 	sleep 2
 
 	# Restart service for changes to take effect
-	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
+	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql --bootstrap
 
 	# If setup is successful, create a hidden file to mark setuping as completed
 	touch /var/lib/mysql/.setup_done

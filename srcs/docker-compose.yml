@@ -37,7 +37,7 @@ services:
         networks:
             - inception
         volumes:
-            - ~/data/wordpress:/var/www/html
+            - ~/Documents/data/wordpress:/var/www/html
         env_file:
             - .env
         environment:
@@ -60,7 +60,7 @@ services:
         networks:
             - inception
         volumes:
-            - ~/data/mariadb:/var/lib/mysql
+            - ~/Documents/data/mariadb:/var/lib/mysql
         env_file:
             - .env
         environment:
