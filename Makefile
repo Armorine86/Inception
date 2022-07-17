@@ -6,16 +6,19 @@
 #    By: mmondell <mmondell@student.42quebec.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/24 10:41:03 by mmondell          #+#    #+#              #
-#    Updated: 2022/07/16 07:03:43 by mmondell         ###   ########.fr        #
+#    Updated: 2022/07/17 13:04:09 by mmondell         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-all: up
+all: main
 
-up:
+main:
 	sudo mkdir -p /home/mmondell/data/mariadb/
 	sudo mkdir -p /home/mmondell/data/wordpress/
 	@docker-compose -f srcs/docker-compose.yml up --build
+
+up:
+	@docker-compose -f srcs/docker-compose.yml up
 
 down:
 	@docker-compose -f srcs/docker-compose.yml down
