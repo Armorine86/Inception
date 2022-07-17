@@ -5,17 +5,18 @@ FROM alpine:3.14
 EXPOSE 3306
 
 # Update package manager
-RUN apk update
-RUN apk upgrade
+RUN apk update && apk upgrade
 
 # Install dependencies
-RUN apk add --update mariadb mariadb-common mariadb-client mariadb-server-utils gettext
+RUN apk add --update mariadb mariadb-common mariadb-client mariadb-server-utils gettext bash
 
 # Replace the default mariadb Config files with our own
-RUN rm -f /etc/my.cnf.d/mariadb-server.cnf
+RUN rm -f /etc/my.cnf
+COPY conf/my.cnf /etc/my.cnf
+
 RUN rm -f /etc/my.cnf.d/my.cnf
-COPY conf/my.cnf /etc/my.cnf.d/mly.cnf
 COPY conf/my.cnf /etc/mysql/my.cnf
+
 
 # Copy setup script to the container
 RUN mkdir -p tools/
@@ -29,14 +30,11 @@ RUN chmod +x tools/setup.sh
 
 # Create Necessary folders for Mariadb, and change ownership
 RUN mkdir -p /run/mysqld /var/lib/mysql
+RUN chmod 777 /var/lib/mysql
+RUN chmod 777 /run/mysqld
 RUN chown -R mysql:mysql /var/lib/mysql
 RUN chown -R mysql:mysql /run/mysqld
 
-# Initialize system tables and set Data directory
-# RUN /usr/bin/mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql --rpm --skip-test-db
-# RUN	mariadb-install-db --datadir=/var/lib/mysql --auth-root-authentication-method=normal
+ENTRYPOINT [ "bash", "tools/setup.sh" ]
 
-ENTRYPOINT [ "tools/setup.sh" ]
-
-# Run the script to setup the DB
-CMD [ "mysqld", "--user=root" ]
+CMD [ "mysqld" ]

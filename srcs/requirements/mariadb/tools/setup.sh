@@ -1,33 +1,31 @@
-#!/usr/bin/env sh
+mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 
-set -exo pipefail
+mysqld --user=mysql --datadir=/var/lib/mysql &
+sleep 5
 
-SUCCESS=/var/lib/mysql/.setup_done
+mysql -e "CREATE DATABASE ${WP_DATABASE};"
 
-if [ -f "$SUCCESS" ]
-then
-	echo "Database is already configured... Starting MariaDB"
-	/usr/bin/mysqld
-else
-	if [ ! -d "/var/lib/mysql/mysql" ]; then
-  		mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=root --rpm --skip-test-db > /dev/null
-	fi
-	# Start mysql service
-	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql
-	sleep 5
+echo "CREATED DATABASE"
+sleep 1
 
-	# envsubst is used to substitute shell format strings with environment variables in text.
-	# redirect the config with expended variable into initdb.sql
-	envsubst < db_setup.sql > initdb.sql
+mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_USER_PWD}';"
 
-	# Kill process
-	pkill mysqld
-	sleep 2
+echo "CREATED USER"
+sleep 1
 
-	# Restart service for changes to take effect
-	/usr/bin/mysqld --user=root --datadir=/var/lib/mysql --bootstrap
+mysql -e "GRANT ALL PRIVILEGES ON \`${WP_DATABASE}\`.* TO \`${DB_USER}\`@'%' IDENTIFIED BY '${DB_USER_PWD}';"
 
-	# If setup is successful, create a hidden file to mark setuping as completed
-	touch /var/lib/mysql/.setup_done
+echo "PRIVILEGES GRANTED"
+sleep 1
 
-fi
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PWD}';"
+
+echo "ROOT PASSWORD SET"
+sleep 1
+
+mysql -u root -p${DB_ROOT_PWD} -e "FLUSH PRIVILEGES;"
+
+echo "PRIVILEGES FLUSHED"
+pkill mysqld
+
+exec $@

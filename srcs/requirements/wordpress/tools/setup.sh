@@ -2,41 +2,56 @@
 
 set -exo pipefail
 
-sleep 10
+sleep 20
 
-# Download Wordpress/php CLI to specified directory and give permissions
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-chmod +x wp-cli.phar
-mv -f wp-cli.phar /usr/local/bin/wp
+if [ ! -f "/var/www/html/wp-config.php" ]; then
+	wp core download --allow-root --path="/var/www/html"
 
-# Replace default configuration files with custom ones for Wordpress and php
-rm -f /var/www/html/wp-config.php7
-rm -f /etc/php7/php-fpm.d/www.conf
+	rm -f /var/www/html/wp-config.php7
+	rm -f /var/www/html/wp-config.php
+	rm -f /etc/php7/php-fpm.d/www.conf
 
-cp ./config.php /var/www/html/wp-config.php
-cp ./www.conf /etc/php7/php-fpm.d/www.conf
+	cp ./www.conf /etc/php7/php-fpm.d/www.conf
 
-# Exec WP / PHP cli installations, set admin and user
-wp core download --allow-root --path="/var/www/html"
+	if [ "$1" = "php-fpm7" ]; then
 
-wp 	user create \
-	--allow-root \
-	--path="/var/www/html" \
-	${WORDPRESS_USER} \
-	"mmondell@mmondell.com" \
-	--role=author \
-	--user_pass=${WORDPRESS_USER_PWD}
-sleep 2
+		for i in {0..30}; do
+			if mariadb -h$DB_SERVER -u$DB_USER -p$DB_USER_PWD --database=$WP_DATABASE <<<'SELECT 1;' &>/dev/null; then
+				break
+			fi
+			sleep 2
+		done
+	fi
 
-wp 	core install \
-	--allow-root \
-	--path="/var/www/html" \
-	--url=${DOMAIN_NAME} \
-	--title=${WORDPRESS_TITLE} \
-	--admin_user=${WORDPRESS_ADMIN} \
-	--admin_password=${WORDPRESS_ADMIN_PWD} \
-	--admin_email=${WORDPRESS_ADMIN_EMAIL} \
-	--skip-email
 
-# -> Deamonizer
+		wp config create \
+			--allow-root \
+			--dbname=$WP_DATABASE \
+			--dbuser=$DB_USER \
+			--dbpass=$DB_USER_PWD \
+			--dbhost=$DB_SERVER \
+			--dbcharset="utf8" \
+			--dbcollate="utf8_general_ci" \
+			--path="/var/www/html"
+
+		wp 	core install \
+			--allow-root \
+			--title="${WP_TITLE}" \
+			--admin_name="${DB_USER}" \
+			--admin_password="${DB_USER_PWD}" \
+			--admin_email="wordpress@superuser.com" \
+			--skip-email \
+			--url="${DOMAIN_NAME}" \
+			--path="/var/www/html" 
+
+		wp 	user create \
+			--allow-root \
+			$WP_USER \
+			$WP_USER_EMAIL \
+			--role=author \
+			--user_pass=$WP_USER_PWD \
+			--path="/var/www/html" 
+
+fi
+
 $@
