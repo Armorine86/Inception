@@ -3,7 +3,7 @@ mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 mysqld --user=mysql --datadir=/var/lib/mysql &
 sleep 5
 
-mysql -e "CREATE DATABASE ${WP_DATABASE};"
+mysql -e "CREATE DATABASE IF NOT EXISTS ${WP_DATABASE};"
 
 echo "CREATED DATABASE"
 sleep 1

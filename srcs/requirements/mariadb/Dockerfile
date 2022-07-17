@@ -1,5 +1,5 @@
 # Pull base Image for the container
-FROM alpine:3.14
+FROM alpine:3.15
 
 # Expose the port for the network
 EXPOSE 3306
