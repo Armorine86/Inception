@@ -5,11 +5,10 @@ FROM alpine:3.14
 EXPOSE 443 9000
 
 # Update and upgrade apt-get
-RUN apk update
-RUN apk upgrade
+RUN apk update && apk upgrade
 
 # Install dependencies
-RUN apk add nginx openssl
+RUN apk add nginx openssl bash openrc
 
 # Create root folder for the webpage and Copy the index.html inside
 RUN mkdir -p /var/www/html

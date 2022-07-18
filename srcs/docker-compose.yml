@@ -1,5 +1,5 @@
 # -> Latest version of docker-compose
-version: '3'
+version: '3.3'
 
 services:
     nginx:
@@ -7,85 +7,60 @@ services:
             - wordpress
         build: requirements/nginx/
         image: nginx_img
-        container_name: nginx_cont
+        container_name: nginx
         ports:
             - "443:443"
         networks:
             - inception
         volumes:
-            - /home/mmondell/data/wordpress:/var/www/html
+            - volume_wordpress:/var/www/html
         restart: unless-stopped
-    
+
     wordpress:
         depends_on:
             - mariadb
-        build:
-            context: requirements/wordpress/
-            args:
-                DOMAIN_NAME: ${DOMAIN_NAME}
-                MARIA_DB_USER: ${MARIA_DB_USER}
-                MARIA_DB_USER_PWD: ${MARIA_DB_USER_PWD}
-                DB_SERVER: ${DB_SERVER}
-                WORDPRESS_ADMIN: ${WORDPRESS_ADMIN}
-                WORDPRESS_ADMIN_PWD: ${WORDPRESS_ADMIN_PWD}
-                WORDPRESS_USER: ${WORDPRESS_USER}
-                WORDPRESS_USER_PWD: ${WORDPRESS_USER_PWD}
+        env_file:
+            - .env
+        build: requirements/wordpress/
         image: wp_img
-        container_name: wp_cont
+        container_name: wp
         expose:
             - "3306"
         networks:
             - inception
         volumes:
-            - ~/Documents/data/wordpress:/var/www/html
-        env_file:
-            - .env
-        environment:
-            - DOMAIN_NAME=${DOMAIN_NAME}
-            - MARIA_DB_USER=${MARIA_DB_USER}
-            - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
-            - DB_SERVER=${DB_SERVER}
-            - WORDPRESS_ADMIN=${WORDPRESS_ADMIN}
-            - WORDPRESS_ADMIN_PWD=${WORDPRESS_ADMIN_PWD}
-            - WORDPRESS_USER=${WORDPRESS_USER}
-            - WORDPRESS_USER_PWD=${WORDPRESS_USER_PWD}
+            - volume_wordpress:/var/www/html
         restart: on-failure
 
     mariadb:
-        build: requirements/mariadb
+        env_file:
+            - .env
+        build: requirements/mariadb/
         image: mariadb_img
-        container_name: mariadb_cont
+        container_name: mariadb
         expose:
             - "9000"
         networks:
             - inception
         volumes:
-            - ~/Documents/data/mariadb:/var/lib/mysql
-        env_file:
-            - .env
-        environment:
-            - MARIA_DB_USER=${MARIA_DB_USER}
-            - MARIA_DB_USER_PWD=${MARIA_DB_USER_PWD}
-            - DB_SERVER=${DB_SERVER}
-            - MARIA_DB_NEW_ROOT_PWD=${MARIA_DB_NEW_ROOT_PWD}
+            - volume_mariadb:/var/lib/mysql
         restart: on-failure
 
 networks:
     inception:
-#        name: inception
         driver: bridge
 
 volumes:
-    volume_mariadb: 
+    volume_mariadb:
         driver: local
         driver_opts:
             o: 'bind'
             type: 'none'
-            device: '~/Documents/inception/volumes'
-    
+            device: '/home/mmondell/data/mariadb'
+
     volume_wordpress:
         driver: local
         driver_opts:
             o: 'bind'
-            type: 'none' 
-            device: '~/Documents/inception/volumes'
+            type: 'none'
+            device: '/home/mmondell/data/wordpress'
