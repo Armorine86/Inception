@@ -1,34 +1,29 @@
-if [ ! -f "/var/lib/mysql/.success" ]; then
-	echo "DATABASE ALREADY SET UP"
-	exec $@
-else
-	mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 
-	mysqld --user=mysql --datadir=/var/lib/mysql &
-	sleep 5
+mysqld --user=mysql --datadir=/var/lib/mysql &
+sleep 5
 
-	mysql -e "CREATE DATABASE IF NOT EXISTS ${WP_DATABASE};"
+mysql -e "CREATE DATABASE IF NOT EXISTS ${WP_DATABASE};"
 
-	echo "CREATED DATABASE"
+echo "CREATED DATABASE"
 
-	mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_USER_PWD}';"
+mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_USER_PWD}';"
 
-	echo "CREATED USER"
+echo "CREATED USER"
 
-	mysql -e "GRANT ALL PRIVILEGES ON \`${WP_DATABASE}\`.* TO \`${DB_USER}\`@'%' IDENTIFIED BY '${DB_USER_PWD}';"
+mysql -e "GRANT ALL PRIVILEGES ON \`${WP_DATABASE}\`.* TO \`${DB_USER}\`@'%' IDENTIFIED BY '${DB_USER_PWD}';"
 
-	echo "PRIVILEGES GRANTED"
+echo "PRIVILEGES GRANTED"
 
-	mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PWD}';"
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PWD}';"
 
-	echo "ROOT PASSWORD SET"
+echo "ROOT PASSWORD SET"
 
-	mysql -u root -p${DB_ROOT_PWD} -e "FLUSH PRIVILEGES;"
+mysql -u root -p${DB_ROOT_PWD} -e "FLUSH PRIVILEGES;"
 
-	echo "PRIVILEGES FLUSHED"
+echo "PRIVILEGES FLUSHED"
 
-	touch /var/lib/mysql/.success
-	pkill mysqld
+touch /var/lib/mysql/.success
+pkill mysqld
 
-	exec $@
-fi
+exec $@

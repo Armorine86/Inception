@@ -2,8 +2,6 @@
 
 set -exo pipefail
 
-sleep 20
-
 if [ ! -f "/var/www/html/wp-config.php" ]; then
 	wp core download --allow-root --path="/var/www/html"
 
