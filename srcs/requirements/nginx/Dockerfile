@@ -1,4 +1,3 @@
-# Parent image layer
 FROM alpine:3.15
 
 EXPOSE 443
