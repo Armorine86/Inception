@@ -14,7 +14,7 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
 	if [ "$1" = "php-fpm7" ]; then
 
 		for i in {0..30}; do
-			if mariadb -h$DB_SERVER -u$DB_USER -p$DB_USER_PWD --database=$WP_DATABASE <<<'SELECT 1;' &>/dev/null; then
+			if mariadb -h$DB_SERVER -u$DB_USER -p$DB_USER_PWD --database=$WP_DATABASE <<< 'SELECT 1;' &> /dev/null; then
 				break
 			fi
 			sleep 2
