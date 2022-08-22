@@ -33,6 +33,6 @@ else
 	touch /home/mmondell/data/mariadb/success
 	pkill mysqld
 
-fi
 	exec $@
+fi
 
