@@ -1,6 +1,6 @@
-FILE=/home/mmondell/data/mariadb/.success
+FILE=/home/mmondell/data/mariadb/success
 
-if test -f "$FILE" ; then
+if test -f "/home/mmondell/data/mariadb/success" ; then
 	echo "DATABASE ALREADY SET UP"
 	exec $@
 else
@@ -30,8 +30,9 @@ else
 
 	echo "PRIVILEGES FLUSHED"
 
-	touch $FILE
+	touch /home/mmondell/data/mariadb/success
 	pkill mysqld
 
-	exec $@
 fi
+	exec $@
+

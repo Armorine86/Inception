@@ -7,7 +7,6 @@ RUN apk update && apk upgrade
 RUN apk add nginx openssl
 
 RUN mkdir -p /var/www/html
-COPY conf/index.html /var/www/html/index.html
 
 COPY ./conf/default.conf /etc/nginx/http.d/default.conf
 
