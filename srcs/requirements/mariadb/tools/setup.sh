@@ -1,6 +1,7 @@
 FILE=/home/mmondell/data/mariadb/.success
 
 if [ ! -f "$FILE" ]; then
+	echo "SETUPING DATABASE"
 	mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 
 	mysqld --user=mysql --datadir=/var/lib/mysql &
@@ -31,5 +32,6 @@ if [ ! -f "$FILE" ]; then
 
 	exec $@
 else
+	echo "DATABASE ALREADY SET UP"
 	exec $@
 fi
